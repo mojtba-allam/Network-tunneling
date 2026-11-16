@@ -193,19 +193,6 @@ apply_routes() {
   else
     run ip rule add pref "$PREF" lookup "$TABLE"
   fi
-  # #region agent log
-  python3 - "$PREF" <<'PY' || true
-import json,sys,time
-from pathlib import Path
-pref=sys.argv[1]
-p=Path("/home/panda/Desktop/Network-tunneling/.cursor/debug-f346c5.log")
-import subprocess
-rules=subprocess.check_output(["ip","rule","show"],text=True)
-rec={"sessionId":"f346c5","runId":"idempotent-rule","hypothesisId":"H","location":"network-split-tunnel.sh:apply_routes","message":"ip rule present check","data":{"pref":pref,"match":any(ln.startswith(pref+":") for ln in rules.splitlines()),"rules":rules.strip().splitlines()},"timestamp":int(time.time()*1000),"id":f"log_{int(time.time()*1000)}_H"}
-p.parent.mkdir(parents=True,exist_ok=True)
-p.open("a").write(json.dumps(rec)+"\n")
-PY
-  # #endregion
   local count=0
   while read -r p; do
     [[ -z "$p" ]] && continue
