@@ -224,7 +224,10 @@ split_dns() {
 cmd_apply() {
   need_root "$@"
   [[ -x "$ROOT/rollback.sh" ]] || die "rollback.sh missing or not executable"
-  [[ -f "$BACKUP_DIR/LATEST" ]] || die "no backup; run: $0 backup"
+  if [[ ! -f "$BACKUP_DIR/LATEST" ]]; then
+    log "no backup yet; creating one"
+    cmd_backup >/dev/null
+  fi
   local confirm_file="$ROOT/APPLY_CONFIRMED"
   if [[ "${SPLIT_TUNNEL_CONFIRM:-}" != "yes" && ! -f "$confirm_file" ]]; then
     die "refusing apply. Create $confirm_file or run: sudo SPLIT_TUNNEL_CONFIRM=yes $0 apply"
@@ -233,13 +236,13 @@ cmd_apply() {
   vpn_is_up || log "WARN: VPN is down; routes will apply on next vpn-up if dispatcher is installed"
   apply_routes
   split_dns || log "WARN: split DNS configuration failed"
-  if [[ ! -f "$DISPATCHER" ]]; then
-    install -m 0755 "$TEMPLATE" "$DISPATCHER"
-    date -Is >"$DISPATCHER_FLAG"
-    log "installed dispatcher $DISPATCHER"
-  else
-    log "dispatcher already present"
-  fi
+  local disp_tmp
+  disp_tmp="$(mktemp)"
+  sed "s|^ROOT=.*|ROOT=\"$ROOT\"|" "$TEMPLATE" >"$disp_tmp"
+  install -m 0755 "$disp_tmp" "$DISPATCHER"
+  rm -f "$disp_tmp"
+  date -Is >"$DISPATCHER_FLAG"
+  log "installed dispatcher $DISPATCHER (ROOT=$ROOT)"
   log "apply complete"
   cmd_status
 }

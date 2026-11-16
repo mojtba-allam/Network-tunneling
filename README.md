@@ -1,11 +1,29 @@
-Scripts live in `network-split-tunnel/` (same files as `~/network-split-tunnel/`).
+# Ubuntu OpenConnect split tunnel
 
-- `network-split-tunnel/network-split-tunnel.sh` — status, apply, test
-- `network-split-tunnel/rollback.sh` — undo
-- `network-split-tunnel/README.md` — usage
+VPN stays the default route. Iranian prefixes and `10.14.0.0/16` go via Wi-Fi.
+`.ir` DNS uses the ISP resolvers; everything else stays on VPN DNS.
+
+## Install and run (one command)
+
+From GitHub, on the machine that already has OpenConnect/`nl` up:
 
 ```bash
-ls ~/network-split-tunnel
-sudo ~/network-split-tunnel/network-split-tunnel.sh status
-sudo ~/network-split-tunnel/rollback.sh   # only if you want to undo
+curl -fsSL https://raw.githubusercontent.com/mojtba-allam/Network-tunneling/main/install.sh | bash
+```
+
+That downloads the scripts into `~/network-split-tunnel`, takes a routing backup, and applies the split tunnel (`sudo` will ask for your password).
+
+## After install
+
+```bash
+~/network-split-tunnel/network-split-tunnel.sh status
+~/network-split-tunnel/network-split-tunnel.sh test
+sudo ~/network-split-tunnel/rollback.sh
+```
+
+## Manual clone
+
+```bash
+git clone https://github.com/mojtba-allam/Network-tunneling.git
+sudo SPLIT_TUNNEL_CONFIRM=yes ./Network-tunneling/network-split-tunnel/network-split-tunnel.sh apply
 ```
