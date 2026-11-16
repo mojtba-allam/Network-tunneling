@@ -1,0 +1,33 @@
+#!/bin/bash
+# NetworkManager dispatcher helper (installed only by apply).
+# Re-applies direct routes when the OpenConnect VPN comes up.
+# Removes table 200 / rule 10000 when the VPN goes down so traffic
+# is not left with a stale policy rule. Does not touch Docker.
+set -euo pipefail
+
+IFACE="${1:-}"
+ACTION="${2:-}"
+ROOT="/home/panda/network-split-tunnel"
+SCRIPT="$ROOT/network-split-tunnel.sh"
+LOG="$ROOT/logs/dispatcher.log"
+
+mkdir -p "$(dirname "$LOG")"
+echo "$(date -Is) iface=$IFACE action=$ACTION vpn_con=${CONNECTION_ID:-}" >>"$LOG"
+
+if [[ ! -x "$SCRIPT" ]]; then
+  echo "$(date -Is) missing $SCRIPT" >>"$LOG"
+  exit 0
+fi
+
+# Only react to the OpenConnect VPN interface / connection.
+if [[ "${CONNECTION_ID:-}" == "nl" || "$IFACE" == "vpn0" ]]; then
+  case "$ACTION" in
+    vpn-up|up)
+      "$SCRIPT" reapply-runtime >>"$LOG" 2>&1 || echo "$(date -Is) reapply failed" >>"$LOG"
+      ;;
+    vpn-down|down)
+      "$SCRIPT" teardown-runtime >>"$LOG" 2>&1 || echo "$(date -Is) teardown failed" >>"$LOG"
+      ;;
+  esac
+fi
+exit 0

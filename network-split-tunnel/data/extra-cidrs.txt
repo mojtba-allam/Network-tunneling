@@ -1,0 +1,3 @@
+# Extra prefixes via Wi-Fi (not VPN). Proven: golestan via Pishgaman DNS.
+# Do not add 10.0.0.0/8 (would steal Docker). Do not add 10.10.0.0/16 (VPN).
+10.14.0.0/16
